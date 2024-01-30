@@ -48,7 +48,7 @@ solver_var.solve2(episodes=100, epsilon=0.1, batch_size=32)
 # Get the optimal policy
 optimal_policy = solver_var.get_optimal_policy()
 print("Optimal Policy:", optimal_policy)
-
+print("q table: ", solver_var.q_table)
 # batch_size is the number of transitions sampled from the replay buffer
 batch_size = 64
 n_positions = 36

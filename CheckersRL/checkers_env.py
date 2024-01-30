@@ -116,9 +116,11 @@ class checkers_env:
         """
 checks if the state reaches the end
         """
-        winner = self.game_winner(board)
-        if winner != 0:
-            return True
+        #winner = self.game_winner(board)
+        #if winner != 0:
+         #   return True
 
         # no possible actions for both players
-        return len(self.possible_actions(1)) == 0 and len(self.possible_actions(-1)) == 0
+        self.board=board
+        #print(len(self.possible_actions(1)) == 0 and len(self.possible_actions(-1)) == 0)
+        return len(self.possible_actions(1)) == 0 or len(self.possible_actions(-1)) == 0

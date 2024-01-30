@@ -95,7 +95,14 @@ class solver:
             else:
                 return None
         else:
-            max_action = random.sample(self.env.possible_actions(player), 1)[0]
+            try:
+             max_action = random.sample(self.env.possible_actions(player), 1)[0]
+            except Exception as e:
+                print("error:")
+                print(self.env.possible_actions(player), 1)
+                #print(random.sample(self.env.possible_actions(player), 1)[0])
+
+
         return max_action
 
     def policy_evaluation(self,state,action):
@@ -141,6 +148,8 @@ class solver:
 
             while not self.env.is_terminal(state):
                 action = self.policy_improvement(state, epsilon,self.player)
+                if action is None:
+                    break
                 state, action, next_state, target, td_error,reward = self.policy_evaluation(state, action)
 
                 self.q_func.fit(state, action, self.lr, td_error)
@@ -151,6 +160,7 @@ class solver:
                 total_reward += reward
 
                 state = next_state
+
                 print(state)
             print(f"Episode {episode + 1}, Total Reward: {total_reward}")
 
