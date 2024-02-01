@@ -34,5 +34,5 @@ class q_function():
         state_index, action_index = self.tuple_to_index(state, action)
         current_q_value = self.q_table[state_index, action_index]
         updated_q_value = current_q_value + lr * td_error
-
+        print(updated_q_value)
         self.q_table[state_index, action_index] = updated_q_value

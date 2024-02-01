@@ -94,6 +94,8 @@ class checkers_env:
             self.get_piece(action)
             if self.game_winner(self.board) == player:
                 reward = 1
+            elif self.game_winner(self.board) == -player:
+                reward = -1
             else:
                 reward = 0
         else:
