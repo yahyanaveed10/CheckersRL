@@ -57,7 +57,9 @@ class solver:
     #     self.q_func = q_func
     #     self.env = checkers_env.checkers_env(env.initialize_board(), player)
     #     self.player = player
-
+    def clear_memory(self):
+        del self.memory
+        self.memory = deque(maxlen=self.capacity)
     def push(self, transition):
         """
         save a transition
@@ -94,8 +96,8 @@ class solver:
                 #print(max_action)
                 max_value = self.q_func.predict(state, max_action)
                 for a in self.env.possible_actions(player):
-                    print("a:",self.q_func.predict(state, a))
-                    print("current_Q: ", max_value)
+                    #print("a:",self.q_func.predict(state, a))
+                    #print("current_Q: ", max_value)
                     if self.q_func.predict(state, a) > max_value:
                         max_action = a
                         max_value = self.q_func.predict(state, a)
@@ -114,9 +116,12 @@ class solver:
 
     def policy_evaluation(self,state,action):
         next_state, reward = self.env.step(action,self.player)
-        next_state_index = self.q_func.get_state_index(next_state)
+        next_state_index,next_action_index = self.q_func.tuple_to_index(next_state,action)
+        #print("state-index: ",next_state_index,"state: ",next_state)
+        #print("action-index: ", next_action_index,"action: ",action)
         #Q-Value for the action using bellman reward + gamma(max of q function) it rtrives all possible actions in the next state
-        target = reward + self.gamma * np.max(self.q_func.q_table[next_state_index, :])
+        #print("len: ",len(self.q_func.q_table[0]))
+        target = reward + self.gamma * np.max(self.q_func.q_table[next_state_index, next_action_index])
         td_error = target - self.q_func.predict(state, action)
         return state, action, next_state, target, td_error,reward
 
@@ -135,7 +140,11 @@ class solver:
         self.q_func.q_table[states, actions] += self.step_size * (targets - predicted_values)
 
     def get_optimal_policy(self):
-        optimal_policy = np.argmax(self.q_func.q_table, axis=1)
+        optimal_policy = []
+        for state_index in range(self.q_func.q_table.shape[0]):
+            optimal_action = np.argmax(self.q_func.q_table[state_index, :])
+            optimal_policy.append(optimal_action)
+        #optimal_policy = np.argmax(self.q_func.q_table, axis=1)
         return optimal_policy
 
     def solve(self, episode, epsilon, batch_size):
@@ -148,35 +157,44 @@ class solver:
             samples = random.sample(self.memory, batch_size)
             self.policy_evaluation()
             self.q_func.fit()
-    def solve2(self, episodes, epsilon, batch_size):
-        for episode in range(episodes):
-            total_reward = 0
+    def solve2(self, episodes, epsilon, batch_size,numberOfGames):
+      x = 0
+      for epi in range(episodes):
+        total_reward_per_episode = 0
+       # x = 0
+        for game in range(numberOfGames):
             state = self.env.initialize_board()
             player_2 = -1
             env2 = checkers_env.checkers_env(state, player_2)
+            #x= 0
+            total_reward = 0
             while not self.env.is_terminal(state):
                 action = self.policy_improvement(state, epsilon,self.player)
                 if action is None:
                     if self.env.game_winner(state) == self.player:
-                        reward = 1
+                        reward = 12
                     else:
-                        reward = -1
+                        reward = -12
                     total_reward += reward
+                    print("len after 1 game", len(self.q_func.state_index_mapping))
+                    print("actions taken: ", x)
                     break
                 starters2 = env2.possible_pieces(self.player2)
                 actions_player2 = env2.possible_actions(player_2)
                 if len(actions_player2) == 0:
                    if env2.game_winner(state) == player_2:
-                      total_reward += -1
+                      total_reward += -12
                    else:
-                    total_reward += 1
+                    total_reward += 12
+                    print("len after 1 game", len(self.q_func.state_index_mapping))
+                    print("actions taken: ", x)
                     break
                 else:
                  state, negate_reward = random_ai.make_a_move(possible_actions=actions_player2, env=env2, player=player_2)
                  #print("AI Move:")
                  #print(state)
                 state, action, next_state, target, td_error,reward = self.policy_evaluation(state, action)
-                print("reward: ",reward)
+                #print("reward: ",reward)
                 #print("RL Move:")
                 #print(state)
                 self.q_func.fit(state, action, self.lr, td_error)
@@ -186,11 +204,15 @@ class solver:
                 #self.experience_replay(batch_size)
 
                 total_reward += reward
+                total_reward_per_episode += total_reward
 
                 state = next_state
-
+                x+=1
+        print(f"possiblestates: {x}")
+            #print("len after 1 game",len(self.q_func.state_index_mapping))
+            #print("actions taken: ", x)
             #self.experience_replay(batch_size)
-            print(f"Episode {episode + 1}, Total Reward: {total_reward}")
+        print(f"Episode {epi + 1}, Total Reward: {total_reward_per_episode}")
 
 
 

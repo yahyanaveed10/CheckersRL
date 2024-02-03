@@ -84,6 +84,7 @@ class checkers_env:
             return 0
 
     def step(self, action, player):
+        reward = 0
         if type(action[0] == int) or type(action[0] == float) :
          row1, co1, row2, co2 = action
         else:
@@ -92,14 +93,14 @@ class checkers_env:
             self.board[row1][co1] = 0
             self.board[row2][co2] = player
             self.get_piece(action)
-            if self.game_winner(self.board) == player:
-                reward = 1
+            if self.piece_captured(self.board, action):
+                reward = 3
+            if self.game_winner(self.board) == player or self.piece_captured(self.board, action):
+                reward = 12
             elif self.game_winner(self.board) == -player:
-                reward = -1
-            else:
-                reward = 0
+                reward = -12
         else:
-            reward = 0
+            reward = -3
 
         return [self.board, reward]
 
@@ -126,3 +127,23 @@ checks if the state reaches the end
         self.board=board
         #print(len(self.possible_actions(1)) == 0 and len(self.possible_actions(-1)) == 0)
         return len(self.possible_actions(1)) == 0 or len(self.possible_actions(-1)) == 0
+    def piece_captured(self, board, action):
+     """
+    Check if an opponent's piece is captured after a move.
+    """
+     if type(action[0] == int) or type(action[0] == float):
+         start_row, start_col, end_row, end_col = action
+     else:
+         end_row, start_col, end_row, end_row = action[0]
+
+    # Check if the move is a capture move (jump over opponent's piece)
+     if abs(end_row - start_row) == 2 and abs(end_col - start_col) == 2:
+        # Calculate the position of the captured piece
+        captured_row = (start_row + end_row) // 2
+        captured_col = (start_col + end_col) // 2
+
+        # Check if there is an opponent's piece at the captured position
+        if board[captured_row][captured_col] == -1:
+            return True
+
+     return False
