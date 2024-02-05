@@ -169,8 +169,9 @@ class solver:
                 #self.push(transition)
                 actions_player2 = env2.possible_actions(player_2)
                 if len(actions_player2) == 0:
-                    if reward == 0 or reward == 2:
-                        reward += 12
+                    if len(self.env.possible_actions(self.player)) > 0:
+                       if reward == 0 or reward == 2:
+                          reward += 12
                     total_reward += reward
                     #total_reward_per_episode += total_reward
                     #print("AI is out of moves Rl won")
@@ -194,16 +195,17 @@ class solver:
 
             if self.env.game_winner(state)== self.player:
                     game_won +=1
-                    #print("game won,state:  \n ",state)
+                    print("game won,state:  \n ",state)
             elif self.env.game_winner(state)== -self.player:
                     games_lost += 1
-                    #print("game lost,state: \n", state)
+                    print("game lost,state: \n", state)
             elif self.env.game_winner(state) == 0:
                     games_drawn += 1
-                    #print("game drawn,state: \n", state)
+                    print("game drawn,state: \n", state)
                     #print(state,"\npossible actions:", env2.possible_actions(player_2))
                    # print("game won, reward", reward)
             total_reward_per_episode += total_reward
+            print("reward each game: ",total_reward)
         #print(f"possiblestates: {x}")
             #print("len after 1 game",len(self.q_func.state_index_mapping))
             #print("actions taken: ", x)
@@ -222,8 +224,6 @@ class solver:
       print("games won: ", games_won_total )
       print("games lost ", games_lost_total)
       print("games drawn ", games_drawn_total)
-
-
 
 
 
