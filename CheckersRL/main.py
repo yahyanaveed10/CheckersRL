@@ -39,19 +39,19 @@ env = checkers_env.checkers_env(board, 1)
 env.render()
 starters = env.possible_pieces(1)
 actions_player1 = env.possible_actions(player=1)
-print(actions_player1)
+#print(actions_player1)
 env.step([1, 1, 2, 0], 1)
 # env2.step(actions_player2 = env.possible_actions(player=-1))
 env.render()
-state_space_size = len(env.board.flatten()) * 10000
-action_space_size = len(env.possible_actions(1)) * 10
+state_space_size = len(env.board.flatten()) * 1000000
+action_space_size = len(env.possible_actions(1)) * 15
 q_func = q_function.q_function(state_space_size, action_space_size,"final_q_table.json")
-solver_var = solver.solver(step_size=0.1, epsilon=0.5, env=env, capacity=1000, q_func=q_func, lr=0.1, gamma=0.99,
+solver_var = solver.solver(step_size=0.1, epsilon=0.1, env=env, capacity=1000, q_func=q_func, lr=0.1, gamma=0.99,
                            player1=1, player2=player_2, env2=env2)
 ##58749
 
 # Train the solver
-solver_var.solve2(episodes=100, epsilon=0.1, batch_size=32,numberOfGames=100)
+solver_var.solve2(episodes=25, epsilon=0.1, batch_size=32,numberOfGames=50)
 new_num_rows = len(q_func.state_index_mapping)
 new_num_columns = len(q_func.action_index_mapping)
 q_func.update_q_table_size(new_num_rows, new_num_columns)

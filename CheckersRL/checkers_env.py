@@ -8,10 +8,11 @@ class checkers_env:
 
         self.board = board
         self.player = player
+        self.count = 0
 
     def reset(self):
-        self.board = np.array([[1, 0, 1, 0, 1, 0],
-                      [0, 1, 0, 1, 0, 1],
+        self.board = np.array([[0, 1, 0, 1, 0, 1],
+                      [1, 0, 1, 0, 1, 0],
                       [0, 0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0, 0],
                       [0, -1, 0, -1, 0, -1],
@@ -19,10 +20,11 @@ class checkers_env:
         self.player = 1
     def initialize_board(self):
         # 1 and -1 represent the pieces of two players 1 and -1
+        self.count = 0
         board = np.zeros((6, 6),dtype=int)
         for i in range(2):
             for j in range(0, 6, 2):
-                board[i][j + (i % 2)] = 1
+                board[i][j + ((i+1) % 2)] = 1
                 board[6 - i - 1][j + (i % 2)] = -1
         return board
 
@@ -70,16 +72,40 @@ class checkers_env:
                 if cell < 0.0:
                     negative_count += 1
         return positive_count,negative_count
+
+
+
     def game_winner(self, board):
         #positive_count,negative_count = self.count_board(board)
         if np.sum(board < 0.0) == 0:
             return 1
         elif np.sum(board > 0.0) == 0:
             return -1
-        elif len(self.possible_actions(-1)) == 0:
-            return -1
-        elif len(self.possible_actions(1)) == 0:
-            return 1
+        elif len(self.possible_actions(-1)) == 0 and len(self.possible_actions(1)) == 0:
+            #print( "-1 pieces:", np.sum(board < 0.0))
+            #print( "1 pieces:", np.sum(board > 0.0))
+            #print("1 won", np.sum(board < 0.0) < np.sum(board > 0.0))
+            if np.sum(board < 0.0) < np.sum(board > 0.0):
+                return 1
+            elif np.sum(board < 0.0) > np.sum(board > 0.0):
+                return -1
+            else:
+                return 0
+        #elif (len(self.possible_actions(-1)) == 0 and len(self.possible_actions(1)) == 1) or (len(self.possible_actions(-1)) == 1 and len(self.possible_actions(1)) == 0):
+        #    if np.sum(board < 0.0) < np.sum(board > 0.0):
+        #        return 1
+         #   elif np.sum(board < 0.0) > np.sum(board > 0.0):
+        #        return -1
+        elif (len(self.possible_actions(self.player)) == 0 and len(self.possible_actions(-self.player)) >= 1):
+            return -self.player
+        elif (len(self.possible_actions(-self.player)) == 0 and len(self.possible_actions(self.player)) >= 1):
+            return self.player
+        #elif (len(self.possible_actions(-1)) > 1 and len(self.possible_actions(1)) ==0 ):
+        #    return -1
+       # elif len(self.possible_actions(-1)) == 0:
+        #    return -1
+        #elif len(self.possible_actions(1)) == 0:
+        #    return 1
         else:
             return 0
 
@@ -90,18 +116,23 @@ class checkers_env:
         else:
             row1, co1, row2, co2 = action[0]
         if action in self.possible_actions(player):
+            if self.piece_captured(self.board, action):
+                reward += 2
+                #print("piece captured!")
             self.board[row1][co1] = 0
             self.board[row2][co2] = player
-            self.get_piece(action)
-            if self.piece_captured(self.board, action):
-                reward = 3
-            if self.game_winner(self.board) == player or self.piece_captured(self.board, action):
-                reward = 12
+            #self.get_piece(action)
+            if self.game_winner(self.board) == player:
+                #print("Player :",player, " won")
+                reward += 12
             elif self.game_winner(self.board) == -player:
-                reward = -12
+                #print("Player :",-player, " won")
+                reward += -12
         else:
-            reward = -3
-
+            print(self.possible_actions(player),"player: ", player)
+            print(action)
+            reward += -3
+        self.count += reward
         return [self.board, reward]
 
     def render(self):
@@ -126,7 +157,7 @@ checks if the state reaches the end
         # no possible actions for both players
         self.board=board
         #print(len(self.possible_actions(1)) == 0 and len(self.possible_actions(-1)) == 0)
-        return len(self.possible_actions(1)) == 0 or len(self.possible_actions(-1)) == 0
+        return len(self.possible_actions(1)) == 0 and len(self.possible_actions(-1)) == 0
     def piece_captured(self, board, action):
      """
     Check if an opponent's piece is captured after a move.
@@ -134,7 +165,7 @@ checks if the state reaches the end
      if type(action[0] == int) or type(action[0] == float):
          start_row, start_col, end_row, end_col = action
      else:
-         end_row, start_col, end_row, end_row = action[0]
+         start_row, start_col, end_row, end_col = action[0]
 
     # Check if the move is a capture move (jump over opponent's piece)
      if abs(end_row - start_row) == 2 and abs(end_col - start_col) == 2:
@@ -143,7 +174,8 @@ checks if the state reaches the end
         captured_col = (start_col + end_col) // 2
 
         # Check if there is an opponent's piece at the captured position
-        if board[captured_row][captured_col] == -1:
+        if board[captured_row][captured_col] == -self.player:
+            self.board[captured_row][captured_col] = 0
             return True
 
      return False
