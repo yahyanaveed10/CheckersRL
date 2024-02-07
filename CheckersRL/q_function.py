@@ -20,6 +20,17 @@ class q_function():
             else:
                 self.q_table = lil_matrix((state_size, action_size), dtype=float)
 
+        def get_state_key_from_index(self, index):
+            for key, value in self.state_index_mapping.items():
+                if value == index:
+                    return key
+            return None
+
+        def get_action_key_from_index(self, index):
+            for key, value in self.action_index_mapping.items():
+                if value == index:
+                    return key
+            return None
 
         def get_state_index(self, state):
             state_key = str(state)

@@ -96,9 +96,9 @@ class checkers_env:
         #        return 1
          #   elif np.sum(board < 0.0) > np.sum(board > 0.0):
         #        return -1
-        elif (len(self.possible_actions(self.player)) == 0 and len(self.possible_actions(-self.player)) >= 1):
+        elif (len(self.possible_actions(self.player)) == 0 and len(self.possible_actions(-self.player)) > 1):
             return -self.player
-        elif (len(self.possible_actions(-self.player)) == 0 and len(self.possible_actions(self.player)) >= 1):
+        elif (len(self.possible_actions(-self.player)) == 0 and len(self.possible_actions(self.player)) > 1):
             return self.player
         #elif (len(self.possible_actions(-1)) > 1 and len(self.possible_actions(1)) ==0 ):
         #    return -1
@@ -113,6 +113,8 @@ class checkers_env:
         reward = 0
         if type(action[0] == int) or type(action[0] == float) :
          row1, co1, row2, co2 = action
+        #elif isinstance(action,list):
+        #    row1, co1, row2, co2 = action[0]
         else:
             row1, co1, row2, co2 = action[0]
         if action in self.possible_actions(player):

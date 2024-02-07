@@ -29,6 +29,19 @@ def initialize_board():
             board[6 - i - 1][j + (i % 2)] = -1
     return board
 """
+
+### plot learning curve was adapted from Chat GPT
+def plot_learning_curve(episode_rewards,string):
+    """
+    Plot learning curve using episode rewards
+    """
+    episodes = range(1, len(episode_rewards) + 1)
+    plt.plot(episodes, episode_rewards, marker='o', linestyle='-')
+    plt.xlabel('Episode')
+    plt.ylabel(string)
+    plt.title('Learning Curve')
+    plt.grid(True)
+    plt.show()
 player_2 = -1
 env2 = checkers_env.checkers_env(board, player_2)
 starters2 = env2.possible_pieces(player_2)
@@ -46,8 +59,8 @@ env.step([1, 1, 2, 0], 1)
 env.render()
 state_space_size = len(env.board.flatten()) * 1000000
 action_space_size = len(env.possible_actions(1)) * 15
-q_func = q_function.q_function(state_space_size, action_space_size,"final_q_table.json")
-solver_var = solver.solver(step_size=0.1, epsilon=0.1, env=env, capacity=1000, q_func=q_func, lr=0.1, gamma=0.99,
+q_func = q_function.q_function(state_space_size, action_space_size,None)
+solver_var = solver.solver(step_size=0.1, epsilon=0.5, env=env, capacity=1000, q_func=q_func, lr=0.1, gamma=0.99,
                            player1=1, player2=player_2, env2=env2)
 #n_positions = 36
 #num_actions = 15
@@ -59,7 +72,13 @@ solver_var = solver.solver(step_size=0.1, epsilon=0.1, env=env, capacity=1000, q
 #                           player1=1, player2=player_2, env2=env2)
 #nn_solver_var.solve(episodes=1, epsilon=0.1, batch_size=32,number_of_games=10)
 # Train the solver
-solver_var.solve2(episodes=1, epsilon=0.1, batch_size=32,numberOfGames=10) ###add a breaker to change the value of epsiolon to 0.1
+solver_var.solve2(episodes=100, epsilon=0.5, batch_size=32,numberOfGames=100,perc=1) ###add a breaker to change the value of epsiolon to 0.1
+
+###last_game
+solver_var.use_optimal_policy = True
+solver_var.epsilon=0
+## Uses optimal policies to pred
+solver_var.solve2(episodes=50, epsilon=0.1, batch_size=32,numberOfGames=100,perc=0.1)
 new_num_rows = len(q_func.state_index_mapping)
 new_num_columns = len(q_func.action_index_mapping)
 q_func.update_q_table_size(new_num_rows, new_num_columns)
@@ -68,12 +87,15 @@ print("total number of actions:", len(solver_var.q_func.action_index_mapping))
 print("total number of rows:", solver_var.q_func.q_table.shape[0])
 # Get the optimal policy
 #optimal_policy = solver_var.get_optimal_policy()
-#print("Optimal Policy:", optimal_policy)
-q_func.save_q_table_json('final_q_table.json')
+#print("Optimal Policies:", solver_var.optimal_policy_array)
 print("total number of states:", len(solver_var.q_func.state_index_mapping))
+print("Policies used: ", solver_var.policy_used)
+plot_learning_curve(solver_var.episodes_rewards,"Last Reward")
+plot_learning_curve(solver_var.possible_states_increased,"Number of states")
+plot_learning_curve(solver_var.episode_rewards,"Rewards_per_Episode")
+plot_learning_curve(solver_var.games_won,"games_won")
+q_func.save_q_table_json('final_q_table.json')
 solver_var.clear_memory()
-
-
 # batch_size is the number of transitions sampled from the replay buffer
 batch_size = 64
 n_positions = 36
